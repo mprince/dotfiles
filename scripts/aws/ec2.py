@@ -40,14 +40,50 @@ def edit_tags(name, value):
         ec2.create_tags(DryRun=False, Resources=[instance.id], Tags=[{'Key': 'Product', 'Value': value}])
 
 
-if __name__ == '__main__':
+def get_instances_with_name(name):
     ec2_resource = boto3.resource('ec2', region_name='us-west-2')
     instances = list(ec2_resource.instances.filter(Filters=[{'Name': 'instance-state-name', 'Values': ['running']}]))
     instances_names = []
     for instance in instances:
         for tag in instance.tags:
-            if tag['Key'] == 'Name' and 'String to search for' in tag['Value']:
+            if tag['Key'] == 'Name' and name in tag['Value']:
                 instances_names.append(tag['Value'])
     clusters = set(instances_names)
     for cluster in clusters:
         print(cluster.split(' - ')[0])
+
+
+def add_tags(key, value, name):
+    ec2_resource = boto3.resource('ec2', region_name='us-west-2')
+    instances = list(ec2_resource.instances.filter(Filters=[{'Name': 'instance-state-name', 'Values': ['running']}]))
+    for instance in instances:
+        for tag in instance.tags:
+            if tag['Key'] == 'Name' and name in tag['Value']:
+                instance.create_tags(
+                    Tags=[
+                        {
+                            'Key': key,
+                            'Value': value
+                        }
+                    ]
+                )
+
+
+def delete_tags(key, value, name):
+    ec2_resource = boto3.resource('ec2', region_name='us-west-2')
+    instances = list(ec2_resource.instances.filter(Filters=[{'Name': 'instance-state-name', 'Values': ['running']}]))
+    for instance in instances:
+        for tag in instance.tags:
+            if tag['Key'] == 'Name' and name in tag['Value']:
+                instance.delete_tags(
+                    Tags=[
+                        {
+                            'Key': key,
+                            'Value': value
+                        }
+                    ]
+                )
+
+
+if __name__ == '__main__':
+    print("")
